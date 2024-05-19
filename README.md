@@ -3,6 +3,7 @@ Event Management
 This project manages event registration and booking. 
 Organizers can create events and users can register to participate in said events.
 
+**A pdf with references is added for easier evaluation**
 
 
 How to run:
@@ -17,12 +18,12 @@ How to run:
 Note: 
 	Some features will be available only after logging in with Microsoft. 
 	The database is seeded with an organizer profile and a few events, but to be able to view data in MyEvents, MyTickets, a ticket reservation after login is needed.
-
-	Ideal flow:
-		- Login with Microsoft
-		- Go to Events
-		- Click on an event to see details
-		- Reserve a ticket
-		- Go to MyTickets (Profile menu) to see the reservation
-		- Go to MyEvents to see the event you registered for
-		- Go to Logout to logout
+ 
+Ideal Frontend flow:
+- Login with Microsoft
+- Go to Events
+- Click on an event to see details
+- Reserve a ticket
+- Go to MyTickets (Profile menu) to see the reservation
+- Go to MyEvents to see the event you registered for
+- Go to Logout to logout
