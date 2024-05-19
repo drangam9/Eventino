@@ -1,0 +1,35 @@
+﻿@page "/counter"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Frontend.Shared
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IAccessTokenProvider TokenProvider
+ 
+<p>@message</p>
+
+@code {
+    private string message;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+           
+            var tokenRequest = await TokenProvider.RequestAccessToken();
+
+            tokenRequest.TryGetToken(out var token);
+            
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Value);
+
+             message = await Http.GetStringAsync("https://localhost:7027/Test/hello");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+}

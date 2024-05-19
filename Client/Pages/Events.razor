@@ -1,0 +1,26 @@
+﻿@page "/events"
+@using Frontend.Components
+@inject DialogService DialogService
+
+	<RadzenPanel Class="rz-my-10 rz-mx-auto" Style="width: 100%;">
+		
+	<ChildContent>
+		<h3 class="px-3">Events</h3>
+		<RadzenDataList Data="@events" TItem="EventModel" PageSize="6" WrapItems="true" AllowPaging="true">
+			<Template>
+				<EventCard eventModel="context" />
+			</Template>
+		</RadzenDataList>
+	</ChildContent>
+	</RadzenPanel>
+
+
+@code {
+	RadzenScheduler<EventModel> scheduler = new RadzenScheduler<EventModel>();
+	private List<EventModel> events = new List<EventModel>();
+	protected override async Task OnInitializedAsync()
+	{
+		var client = new HttpClient();
+		events = await client.GetFromJsonAsync<List<EventModel>>("https://localhost:7027/Event");
+	}
+}

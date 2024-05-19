@@ -1,0 +1,26 @@
+﻿@page "/my-events"
+@using Frontend.Components
+@inject DialogService DialogService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+<RadzenCard>
+
+<RadzenScheduler @ref=@scheduler style="height: 750px;" TItem="EventModel" Data=@events StartProperty="DateTime" EndProperty="EndDate"
+				 TextProperty="Title" SelectedIndex="2">
+
+	<RadzenDayView />
+	<RadzenWeekView />
+	<RadzenMonthView />
+</RadzenScheduler>
+</RadzenCard>
+
+@code {
+	RadzenScheduler<EventModel> scheduler = new RadzenScheduler<EventModel>();
+	private List<EventModel> events = new List<EventModel>();
+	protected override async Task OnInitializedAsync()
+	{
+		var client = new HttpClient();
+		var userId = await localStorage.GetItemAsync<string>("userId");
+		events = await client.GetFromJsonAsync<List<EventModel>>("https://localhost:7027/Ticket/myevents/" + userId);
+
+	}
+}

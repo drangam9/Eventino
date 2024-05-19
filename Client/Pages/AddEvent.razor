@@ -1,0 +1,80 @@
+﻿@page "/add-event"
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<div class="container-fluid" style="width:500px">
+    <div class="row px-3 mt-5">
+<h3>Add Event</h3>
+        <div >
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Title</RadzenText>
+                <RadzenTextBox @bind-Value="eventModel.Title" class="w-100" aria-label="Default TextBox" />
+            
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Description</RadzenText>
+                <RadzenTextArea @bind-Value="eventModel.Description" class="w-100" aria-label="Default TextBox" />
+           
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">DateTime</RadzenText>
+                <RadzenDatePicker @bind-Value="eventModel.DateTime" DateRender=@DateRender class="w-100" ShowTime="true" MinutesStep="15" />
+          
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Location</RadzenText>
+                <RadzenTextBox @bind-Value="eventModel.Location" class="w-100" aria-label="Default TextBox" />
+          
+                <RadzenRow>
+                     
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3" Style="width:45%">Duration</RadzenText>
+
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3" Style="width:45%">Price</RadzenText>
+                </RadzenRow>
+                <RadzenRow>
+
+                <RadzenDatePicker @bind-Value=@time Change=@(_ => OnChange()) Style="width:45%" ShowTime="true" TimeOnly="true" MinutesStep="15" DateFormat="HH:mm" Name="DatePickerTimeOnly" />
+                <RadzenNumeric @bind-Value=@eventModel.Price Style="width:45%" />
+                </RadzenRow>
+            
+                <RadzenButton Click=@Save Class="mt-3">Save</RadzenButton>
+            </RadzenCard>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    EventModel eventModel = new EventModel();
+    TimeOnly time = new TimeOnly();
+    Guid entraId, userId;
+    override protected async Task OnInitializedAsync()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		entraId = Guid.Parse(authState.User.FindFirst("oid").Value);
+        
+        userId = await HttpClient.GetFromJsonAsync<Guid>("https://localhost:7027/User/entra/" + entraId);
+
+	}
+
+
+    private void OnChange()
+	{
+		eventModel.Duration = new TimeSpan(time.Hour, time.Minute, 0);
+	}
+
+    private async Task Save()
+	{
+		eventModel.OrganizerId = userId;
+		var response = await HttpClient.PostAsJsonAsync("https://localhost:7027/Event", eventModel);
+		if (response.IsSuccessStatusCode)
+		{
+			NavigationManager.NavigateTo("events");
+		}
+	}
+
+    void DateRender(DateRenderEventArgs args)
+    {
+        if (args.Date < DateTime.Now)
+        {
+            args.Disabled = true;
+            args.Attributes.Add("style", "pointer-events:none");
+        }
+
+    }
+}

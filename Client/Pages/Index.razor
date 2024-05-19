@@ -1,0 +1,74 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Text.Json
+@using System.Security.Claims
+
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
+@inject IAccessTokenProvider AuthorizationService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Index</PageTitle>
+
+<RadzenCard class="d-flex align-items-center">
+<div style="width:90%; margin-left: 30px">
+
+<h2>Welcome to Eventino!</h2>
+
+<p class="mb-5">Where fun doesn't have a schedule</p>
+
+<RadzenButton Text="Check out our events" Click="NavigateToEvents" Style="margin-right: 10px;"></RadzenButton>
+</div>
+<RadzenImage Path="/unicycle_md.webp" Style="width: 100%;"></RadzenImage>
+</RadzenCard>
+
+
+@code {
+	[CascadingParameter]
+	private Task<AuthenticationState> AuthenticationState { get; set; }
+
+	public AccessToken AccessToken { get; set; }
+
+	private string userId = "";
+
+	public ClaimsPrincipal AuthenticatedUser { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+		AuthenticatedUser = state.User;
+
+		var userOid = AuthenticatedUser.FindFirst("oid");
+		if(userOid != null)
+		{
+			userId = await Http.GetFromJsonAsync<string>($"https://localhost:7027/User/entra/{userOid.Value}") ?? "";		
+			await localStorage.SetItemAsync("userId", userId);
+		}
+		var accessTokenResult = await AuthorizationService.RequestAccessToken();
+
+		if (!accessTokenResult.TryGetToken(out var token))
+		{
+			NavigationManager.NavigateTo("authentication/login");
+		}
+
+		AccessToken = token;
+
+		Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken.Value);
+		var response = await Http.PostAsJsonAsync("https://localhost:7027/User", new { Name = AuthenticatedUser.Identity?.Name, Email = AuthenticatedUser.FindFirst("preferred_username")?.Value, EntraOid = AuthenticatedUser.FindFirst("oid")?.Value });
+
+	}
+
+	private void NavigateToEvents()
+	{
+		NavigationManager.NavigateTo("/events");
+	}
+
+
+}

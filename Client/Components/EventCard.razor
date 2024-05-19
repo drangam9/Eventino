@@ -1,0 +1,63 @@
+﻿
+@inject NavigationManager Navigation
+
+
+<style>
+	.event-card:hover {
+		transform: scale(1.02);
+		transition: transform 0.2s;
+	}
+	</style>
+<div class="event-card d-flex"  style="width: 500px; border-radius: 20px; height: 180px " @onclick=@OnClick>
+	<RadzenCard class="rz-shadow-0"  Style=@style></RadzenCard>
+	<RadzenCard class="rz-shadow-0 rz-border-radius-0 " Style="width:300px">
+		<RadzenRow >
+			<RadzenText TextStyle="TextStyle.Caption" class="rz-display-flex rz-mb-5">@eventModel.DateTime.ToString("dddd, dd MMMM yyyy HH:mm")</RadzenText>
+		</RadzenRow>
+		<RadzenRow >
+
+			<RadzenText TextStyle="TextStyle.H6" class=" rz-mb-4">@eventModel.Title </RadzenText>
+		</RadzenRow>
+		
+		
+		<RadzenRow JustifyContent="JustifyContent.SpaceBetween">
+			<RadzenText  Style="opacity:0.7"> @eventModel.Location</RadzenText>
+			<RadzenText  Style="opacity:0.7">@eventModel.Price</RadzenText>
+		</RadzenRow>
+
+	</RadzenCard>
+	
+
+</div>
+
+@code {
+	[Parameter]
+	public EventModel eventModel { get; set; }
+	private static string[] colors = new string[] {  "#E6E6FA", // Lavender
+    "#FFFACD", // Lemon Chiffon
+    "#E0FFFF", // Light Cyan
+    "#FFB07C", // Light Coral
+    "#FFECB3", // Light Goldenrod
+    "#FFC1CC", // Light Salmon Pink
+    "#FFD1DC", // Light Pinkish
+    "#D1F2EB", // Mint Cream
+    "#FFF5BA", // Light Yellow
+    "#FFC4C4", // Pink Cloud
+    "#FFC0CB", // Pink
+    "#E5E4E2", // Platinum
+    "#F0EAD6", // Eggshell
+    "#FFFDD0", // Cream
+    "#FDE6E0", // Linen
+    "#ECEFF1", // Whitesmoke
+    "#F6E3CE", // Almond
+    "#FFDFD3", // Light Peach
+    "#F7CAC9", // Pale Pink
+    "#FDEDEC"  // Snow
+	};
+	private string color = colors[new Random().Next(0, 20)];
+	private string style => $"background-color: {color};width:200px";
+	private void OnClick()
+	{
+		Navigation.NavigateTo("event?id=" + eventModel.EventId);
+	}
+}

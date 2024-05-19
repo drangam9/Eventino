@@ -1,0 +1,71 @@
+﻿
+<style>
+    .topnav {
+        overflow: hidden;
+        width: 100%;
+        display:flex;
+        justify-content: center;
+        align-items: center;
+        position: sticky;
+        top:0;
+        background-color: #fff
+    }
+        .topnav a {
+            float: left;
+            color: black;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 18px;
+        }   
+</style>
+
+<div class="rz-p-sm-6">
+    <RadzenMenu Style="justify-content:space-around;">
+        <div>
+
+        <NavLink class="nav-link px-4" href="" Match="NavLinkMatch.All">
+            <h2 style="font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;letter-spacing:5px">EVENTINO</h2>
+        </NavLink>
+        </div>
+        <div class="d-flex justify-content-center">
+
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <RadzenMenuItem Text="Home" />  
+            </NavLink>
+        <NavLink class="nav-link" href="events">
+            <RadzenMenuItem Text="Events" />
+        </NavLink>
+
+        <AuthorizeView Roles="administrator">
+
+            <NavLink class="nav-link" href="admin">
+                <RadzenMenuItem Text="Admin Zone"  />
+            </NavLink>
+
+        </AuthorizeView>
+
+
+        <NavLink class="nav-link" href="add-event">
+            <RadzenMenuItem Text="Add Event" />
+        </NavLink>
+        </div>
+        <div>
+
+        <LoginDisplay />
+        </div>
+
+    </RadzenMenu>
+</div>
+
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

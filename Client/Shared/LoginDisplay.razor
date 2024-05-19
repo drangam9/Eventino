@@ -1,0 +1,35 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <RadzenProfileMenu>
+            <Template>
+                <RadzenGravatar Email="drangam9@gmail.com">
+                </RadzenGravatar>
+            </Template>
+            <ChildContent>
+                <RadzenProfileMenuItem Text=@context.User.Identity.Name Icon="account_circle"></RadzenProfileMenuItem>
+                <RadzenProfileMenuItem Text="My Events" Path="my-events" Icon="event"></RadzenProfileMenuItem>
+                <RadzenProfileMenuItem Text="My Tickets" Path="my-tickets" Icon="local_activity"></RadzenProfileMenuItem>
+                <div @onclick="BeginLogOut">
+
+                <RadzenProfileMenuItem Text="Log Out" Icon="logout"></RadzenProfileMenuItem>
+                </div>
+            </ChildContent>
+        </RadzenProfileMenu>
+        
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    public void BeginLogOut()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }   
+
+}

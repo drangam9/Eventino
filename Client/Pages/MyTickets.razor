@@ -1,0 +1,157 @@
+﻿@page "/my-tickets"
+@inject HttpClient client
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager NavigationManager
+
+<style>
+    .ticket-card {
+        width: 600px; /* Adjust width to make the card wider */
+        border: 2px solid #000;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        font-family: Arial, sans-serif;
+        background-color: #ffecd1; /* Background color resembling a ticket */
+        position: relative;
+    }
+
+    .ticket-content {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .ticket-main {
+        flex-grow: 1;
+    }
+
+    .ticket-header, .ticket-body, .ticket-footer {
+        padding: 10px 20px;
+    }
+
+    .ticket-header {
+        background-color: #f7f7f7;
+        border-bottom: 2px dashed #000;
+    }
+
+    .ticket-body {
+        background-color: #fff;
+    }
+
+    .ticket-footer {
+        background-color: #f7f7f7;
+        border-top: 2px dashed #000;
+        text-align: center;
+    }
+
+    .ticket-barcode {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        border-left: 2px solid #000;
+        background-color: #fff;
+    }
+      
+
+    .ticket-card::before, .ticket-card::after {
+        content: "";
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border: 2px solid #000;
+        border-radius: 50%;
+    }
+
+    .ticket-card::before {
+        top: 50%;
+        left: -15px;
+        transform: translateY(-50%);
+    }
+
+    .ticket-card::after {
+        top: 50%;
+        right: -15px;
+        transform: translateY(-50%);
+    }
+</style>
+
+<RadzenPanel Class="rz-my-10 rz-mx-auto" Style="width: 90%;">
+		
+	<ChildContent>
+        <h3 class="px-3">My Tickets</h3>
+		
+        @if (tickets.Count == 0)
+        {
+            <p class="px-3">You have no tickets</p>
+            <RadzenButton Text="Browse Events" Click="NavigateToEvents" Class="btn btn-primary" Style="margin-left: 20px" />
+        }
+        else
+        {
+            
+
+		<RadzenDataList Data="@tickets" TItem="TicketEvent" PageSize="2" WrapItems="true" AllowPaging="true">
+			<Template>
+                <div class="ticket-card">
+                    <div class="ticket-content">
+                        <div class="ticket-main">
+                            <div class="ticket-header">
+                                <h2>@context.Title</h2>
+                                <p>@context.DateTime.ToString("dddd, dd MM yyyy HH:mm")</p>
+                            </div>
+                            <div class="ticket-body">
+                                <p>Location: @context.Location</p>
+                                <p>Type: @context.Type</p>
+                            </div>
+                            <div class="ticket-footer d-flex justify-content-between">
+                                <p >Quantity: @context.Quantity</p>
+                                @{if (context.Price == 0)
+								{
+									<p>Price: Free</p>
+								}
+								else
+								{
+									<p>Price: @context.Price x @context.Quantity</p>
+                                }}
+                                
+                              </div>
+                        </div>
+                        <div class="ticket-barcode">
+                            <img src="/Totally_not_a_Rickroll_QR_code.png" style="height:60%" alt="Barcode" />
+                        </div>
+                    </div>
+                </div>
+				
+			</Template>
+		</RadzenDataList>
+        }
+	</ChildContent>
+	</RadzenPanel>
+
+@code {
+
+    private List<TicketEvent> tickets = new List<TicketEvent>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await localStorage.GetItemAsync<string>("userId");
+        tickets = await client.GetFromJsonAsync<List<TicketEvent>>("https://localhost:7027/Ticket/mytickets/" + userId);
+    }
+
+    private void NavigateToEvents()
+	{
+		NavigationManager.NavigateTo("/events");
+	}
+
+    public class TicketEvent
+    {
+        public string Title { get; set; } = "";
+        public DateTime DateTime { get; set; }
+        public string Location { get; set; } = "";
+        public string Type { get; set; } = "";
+        public int Quantity { get; set; }
+		public decimal Price { get; set; }
+	}
+
+
+}

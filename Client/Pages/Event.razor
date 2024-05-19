@@ -1,0 +1,136 @@
+﻿@page "/event"
+@inject DialogService DialogService
+@inject HttpClient client
+@inject IHttpClientFactory HttpClientFactory
+@inject IAccessTokenProvider AuthorizationService
+@inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize]
+
+
+<RadzenCard style="display:flex;gap:20px;flex-direction:column">
+	<RadzenRow>
+		<RadzenCard Style="background-color:antiquewhite; width:100%; height:200px"></RadzenCard>
+	</RadzenRow>
+	<RadzenRow>
+		<RadzenText TextStyle="TextStyle.Body1" class="rz-display-flex">@eventModel.DateTime.ToString("dd MMMM yyyy HH:mm")</RadzenText>
+	</RadzenRow>
+	<RadzenRow>
+
+		<RadzenText TextStyle="TextStyle.H4" class=" rz-mb-4">@eventModel.Title </RadzenText>
+	</RadzenRow><RadzenRow>
+
+		<RadzenText TextStyle="TextStyle.Body1" class=" rz-mb-4">@eventModel.Description </RadzenText>
+	</RadzenRow>
+
+
+	<RadzenRow JustifyContent="JustifyContent.SpaceBetween">
+		<RadzenText Style="opacity:0.7"> @eventModel.Location</RadzenText>
+	</RadzenRow>
+	<RadzenRow JustifyContent="JustifyContent.SpaceBetween">
+		<RadzenText Style="opacity:0.7">@eventModel.Price</RadzenText>
+	</RadzenRow>
+	
+	<div class="row">
+		<div class="col-md-12">
+			@if (HasTicket)
+			{
+				<RadzenButton Click=@NavigateToTickets Text="View Tickets"></RadzenButton>
+			}
+			else
+			{
+				<RadzenButton Click=@ShowInlineDialog Text="Reserve Tickets"></RadzenButton>
+
+			}
+		</div>
+	</div>
+
+</RadzenCard>
+
+
+@code {
+	private bool HasTicket { get; set; } = false;
+	private Tuple<string, decimal> value { get; set; } = new Tuple<string, decimal>("Free", 0);
+	private int quantity { get; set; }
+	[SupplyParameterFromQuery]
+	[Parameter]
+	public string Id { get; set; }
+
+	private EventModel eventModel = new EventModel();
+	private List<Tuple<string, decimal>> types = new List<Tuple<string, decimal>>();
+	protected override async Task OnInitializedAsync()
+	{
+		var response = await client.GetAsync("https://localhost:7027/Event/" + Id);
+		if (response.IsSuccessStatusCode)
+		{
+			eventModel = await response.Content.ReadFromJsonAsync<EventModel>();
+			types = new List<Tuple<string, decimal>>(){
+				new Tuple<string, decimal>("Standard", eventModel.Price),
+				new Tuple<string, decimal>("VIP", eventModel.Price * 2),
+				new Tuple<string, decimal>("VIP+", eventModel.Price * 3)
+					};
+		}
+
+		var userId = await localStorage.GetItemAsync<Guid>("userId");
+		var ticket = await client.GetAsync("https://localhost:7027/Ticket/myticket/" + userId + "/" + eventModel.EventId);
+		HasTicket = ticket.IsSuccessStatusCode;
+	}
+
+	async Task ShowInlineDialog()
+	{
+		var result = await DialogService.OpenAsync("Reserve Tickets", ds =>
+	@<RadzenStack Gap="1.5rem">
+		<RadzenLabel Text="Select Type" Component="DropDownBindValue" Style="margin-right: 8px; vertical-align: middle;" />
+		<RadzenDropDown @bind-Value=@value Data=@types Disabled=@types[0].Item2.Equals(0) Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+		<RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Quantity</RadzenText>
+		<RadzenNumeric @bind-Value=@quantity InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "enter value" }})" />
+
+		<RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+			<RadzenStack Orientation="Orientation.Horizontal">
+				<RadzenButton Text="Ok" Click=@ReserveTickets Style="width: 80px;" />
+				<RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Light" />
+			</RadzenStack>
+			<RadzenButton Text="Refresh" ButtonStyle="ButtonStyle.Light" />
+		</RadzenStack>
+	</RadzenStack>
+	);
+	}
+
+	private Task<AuthenticationState> AuthenticationState { get; set; }
+
+	public ClaimsPrincipal AuthenticatedUser { get; set; }
+	public AccessToken AccessToken { get; set; }
+
+	async Task ReserveTickets()
+	{
+		var userId = await localStorage.GetItemAsync<Guid>("userId");
+		if (userId == Guid.Empty)
+		{
+			var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+			var entraId = Guid.Parse(authState.User.FindFirst("oid").Value);
+
+			userId = await client.GetFromJsonAsync<Guid>("https://localhost:7027/User/entra/" + entraId);
+			await localStorage.SetItemAsync("userId", userId);
+		}
+
+		var ticket = new TicketModel()
+			{
+				UserId = userId,
+				EventId = eventModel.EventId,
+				Quantity = quantity,
+				Type = value.Item1,
+				Price = value.Item2
+			};
+		await client.PostAsJsonAsync("https://localhost:7027/Ticket", ticket);
+		DialogService.Close(true);
+		Navigation.NavigateTo("event?id=" + eventModel.EventId, true);
+
+	}
+
+	void NavigateToTickets()
+	{
+		Navigation.NavigateTo("my-tickets");
+	}
+}
