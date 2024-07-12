@@ -1,10 +1,7 @@
-Event Management 
+Event Management - .NET + Blazor project
 
 This project manages event registration and booking. 
 Organizers can create events and users can register to participate in said events.
-
-**A pdf with references is added for easier evaluation**
-
 
 How to run:
 
